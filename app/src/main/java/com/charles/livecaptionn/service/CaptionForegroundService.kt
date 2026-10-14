@@ -189,10 +189,12 @@ class CaptionForegroundService : Service() {
             val localeForSpeechRec = LocaleMap.bcp47(sttLanguageCode)
 
             val premium = app.container.premiumRepository.state.first()
-            if (settings.translationBackend == com.charles.livecaptionn.settings.TranslationBackend.ML_KIT &&
-                (com.charles.livecaptionn.translation.MlKitLanguages.requiresPro(settings.sourceLanguageCode) ||
-                    com.charles.livecaptionn.translation.MlKitLanguages.requiresPro(settings.targetLanguageCode)) &&
-                !premium.hasPro
+            if (com.charles.livecaptionn.translation.ProStartGate.requiresPro(
+                    backend = settings.translationBackend,
+                    sourceLanguageCode = settings.sourceLanguageCode,
+                    targetLanguageCode = settings.targetLanguageCode,
+                    hasPro = premium.hasPro
+                )
             ) {
                 failAndStop("This ML Kit language requires Pro. Choose a free language or upgrade.")
                 return@launch
@@ -210,7 +212,8 @@ class CaptionForegroundService : Service() {
             }
 
             app.container.runtimeStore.update {
-                it.copy(running = true, paused = false, status = RecognitionStatus.LISTENING)
+                // Clear a reason left over from an earlier failed start.
+                it.copy(running = true, paused = false, status = RecognitionStatus.LISTENING, lastError = null)
             }
 
             // Prewarm the active translation backend so the first spoken
@@ -328,7 +331,7 @@ class CaptionForegroundService : Service() {
                     }
                     AudioSource.MIC -> {
                         val engine = AndroidSpeechRecognizerManager(
-                            this@CaptionForegroundService, onSpeechResult
+                            this@CaptionForegroundService, onSpeechResult, onError = errorSink
                         )
                         engine.setLanguage(localeForSpeechRec)
                         speechEngine = engine

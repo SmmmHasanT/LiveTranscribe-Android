@@ -10,6 +10,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Lets AndroidSpeechRecognizerManager check which recognition services are
+         installed (package visibility, Android 11+) before binding to one. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
         android:name=".LiveCaptionApp"
         android:allowBackup="true"
@@ -25,6 +33,15 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />
+
+        <!-- Let the Mobile Ads SDK move its initialization and ad-loading work off the
+             main thread (Google's documented mitigation for SDK-related ANRs). -->
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true" />
 
         <!-- Resolve conflict between play-services-ads and play-services-measurement-api
              which both inject this property pointing to different XML file names. -->
