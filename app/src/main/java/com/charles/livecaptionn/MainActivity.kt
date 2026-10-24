@@ -206,6 +206,12 @@ class MainActivity : ComponentActivity() {
         } else {
             startService(intent)
         }
+        lifecycleScope.launch {
+            val app = application as LiveCaptionApp
+            if (app.container.settingsRepository.settingsFlow.first().bigScreenMode) {
+                startActivity(Intent(this@MainActivity, com.charles.livecaptionn.ui.CaptionScreenActivity::class.java))
+            }
+        }
     }
 
     private fun stopCaptionService() {

@@ -240,7 +240,11 @@ class CaptionForegroundService : Service() {
                             TranslationRequest(bufferedText, bufferedLineId, historyOnNextTranslate)
                                 .also { historyOnNextTranslate = false }
                         }
-                        if (partial.text.isNotBlank()) translateSnapshot(partial)
+                        // DeepL: only whole sentences — partials translate poorly
+                        // and burn the character quota.
+                        val skipPartial = app.container.settingsRepository.settingsFlow.first()
+                            .translationBackend == com.charles.livecaptionn.settings.TranslationBackend.DEEPL
+                        if (partial.text.isNotBlank() && !skipPartial) translateSnapshot(partial)
                     }
             }
 
@@ -341,8 +345,10 @@ class CaptionForegroundService : Service() {
                 }
             }
 
-            showOverlay()
-            observeOverlayUpdates()
+            if (!settings.bigScreenMode) {
+                showOverlay()
+                observeOverlayUpdates()
+            }
         }
     }
 

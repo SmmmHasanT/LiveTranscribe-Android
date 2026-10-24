@@ -18,6 +18,8 @@ data class CaptionSettings(
     val translationBackend: TranslationBackend = TranslationBackend.ML_KIT,
     /** User's DeepL API key; stored only in app-private DataStore. */
     val deeplApiKey: String = "",
+    /** Show captions in a full-screen page (Thor bottom screen) instead of the floating overlay. */
+    val bigScreenMode: Boolean = true,
     val sttBaseUrl: String = DEFAULT_STT_URL,
     val overlayWidthDp: Int = DEFAULT_OVERLAY_WIDTH_DP,
     val overlayHeightDp: Int = DEFAULT_OVERLAY_HEIGHT_DP,

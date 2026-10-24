@@ -211,6 +211,10 @@ class MainViewModel(
         viewModelScope.launch { container.settingsRepository.update { it.copy(overlayFontId = fontId) } }
     }
 
+    fun updateBigScreenMode(on: Boolean) {
+        viewModelScope.launch { container.settingsRepository.update { it.copy(bigScreenMode = on) } }
+    }
+
     fun updateDeeplKey(key: String) {
         viewModelScope.launch {
             container.settingsRepository.update { it.copy(deeplApiKey = key.trim()) }

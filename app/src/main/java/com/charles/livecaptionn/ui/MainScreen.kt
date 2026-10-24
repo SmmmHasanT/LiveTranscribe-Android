@@ -269,6 +269,7 @@ fun MainScreen(
                 onStart = { if (startNeedsPro) showUpgradePrompt = true else onStart() },
                 onStop = onStop,
                 canStart = modelReady && permissionReady,
+                onBigScreenChange = viewModel::updateBigScreenMode,
                 modelMissing = !modelReady,
                 onDownloadModel = viewModel::downloadVoskModel,
                 onManageModels = { showVoskSheet = true }
@@ -452,6 +453,7 @@ private fun CaptionControlCard(
     onStart: () -> Unit,
     onStop: () -> Unit,
     canStart: Boolean,
+    onBigScreenChange: (Boolean) -> Unit,
     modelMissing: Boolean = false,
     onDownloadModel: (VoskModelInfo) -> Unit = {},
     onManageModels: () -> Unit = {}
@@ -548,6 +550,30 @@ private fun CaptionControlCard(
                     Spacer(Modifier.width(6.dp))
                     Text(t["Stop"])
                 }
+            }
+            val captionCtx = LocalContext.current
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Alt ekran modu", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Çeviri, üst ekrandaki küçük pencere yerine bu ekranda tam sayfa gösterilir.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(checked = ui.settings.bigScreenMode, onCheckedChange = onBigScreenChange)
+            }
+            if (isRunning && ui.settings.bigScreenMode) {
+                OutlinedButton(
+                    onClick = {
+                        captionCtx.startActivity(
+                            android.content.Intent(captionCtx, CaptionScreenActivity::class.java)
+                        )
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Altyazı ekranını aç") }
             }
             if (!isRunning && !canStart) {
                 Spacer(Modifier.height(8.dp))
