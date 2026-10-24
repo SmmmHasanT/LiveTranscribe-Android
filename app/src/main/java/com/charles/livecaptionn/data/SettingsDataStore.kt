@@ -37,6 +37,7 @@ class SettingsDataStore(private val context: Context) : SettingsRepository {
             p[AUDIO_SOURCE] = next.audioSource.name
             p[STT_BACKEND] = next.sttBackend.name
             p[TRANSLATION_BACKEND] = next.translationBackend.name
+            p[DEEPL_KEY] = next.deeplApiKey.trim()
             p[STT_URL] = next.sttBaseUrl.trim()
             p[OVERLAY_W] = next.overlayWidthDp
             p[OVERLAY_H] = next.overlayHeightDp
@@ -70,6 +71,7 @@ class SettingsDataStore(private val context: Context) : SettingsRepository {
             audioSource = AudioSource.fromName(this[AUDIO_SOURCE] ?: AudioSource.MIC.name),
             sttBackend = SttBackend.fromName(this[STT_BACKEND] ?: SttBackend.LOCAL_VOSK.name),
             translationBackend = TranslationBackend.fromName(this[TRANSLATION_BACKEND]),
+            deeplApiKey = this[DEEPL_KEY] ?: "",
             sttBaseUrl = this[STT_URL] ?: CaptionSettings.DEFAULT_STT_URL,
             overlayWidthDp = this[OVERLAY_W] ?: CaptionSettings.DEFAULT_OVERLAY_WIDTH_DP,
             overlayHeightDp = this[OVERLAY_H] ?: CaptionSettings.DEFAULT_OVERLAY_HEIGHT_DP,
@@ -97,6 +99,7 @@ class SettingsDataStore(private val context: Context) : SettingsRepository {
         val AUDIO_SOURCE = stringPreferencesKey("audio_source")
         val STT_BACKEND = stringPreferencesKey("stt_backend")
         val TRANSLATION_BACKEND = stringPreferencesKey("translation_backend")
+        val DEEPL_KEY = stringPreferencesKey("deepl_api_key")
         val STT_URL = stringPreferencesKey("stt_url")
         val OVERLAY_W = intPreferencesKey("overlay_w")
         val OVERLAY_H = intPreferencesKey("overlay_h")

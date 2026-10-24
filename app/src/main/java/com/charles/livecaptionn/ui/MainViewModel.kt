@@ -211,6 +211,12 @@ class MainViewModel(
         viewModelScope.launch { container.settingsRepository.update { it.copy(overlayFontId = fontId) } }
     }
 
+    fun updateDeeplKey(key: String) {
+        viewModelScope.launch {
+            container.settingsRepository.update { it.copy(deeplApiKey = key.trim()) }
+        }
+    }
+
     fun updateBaseUrl(url: String) {
         viewModelScope.launch {
             container.settingsRepository.update { it.copy(serverBaseUrl = url) }

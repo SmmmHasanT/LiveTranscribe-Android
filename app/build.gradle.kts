@@ -53,7 +53,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.charles.livecaptionn"
+        // Separate id so this DeepL build installs next to the store version.
+        applicationId = "com.charles.livecaptionn.deepl"
         minSdk = 28
         targetSdk = 36
         versionCode = appVersionCode
@@ -119,7 +120,8 @@ android {
         create("github") {
             dimension = "distribution"
             isDefault = true
-            buildConfigField("boolean", "GITHUB_SELF_UPDATE_ENABLED", "true")
+            // Off: upstream updates would not contain the DeepL engine.
+            buildConfigField("boolean", "GITHUB_SELF_UPDATE_ENABLED", "false")
             // Cloudflare Worker (Stripe billing backend) config. Not committed —
             // sourced from local.properties, same pattern as translate.url/stt.url.
             buildConfigField("String", "PREMIUM_WORKER_BASE_URL",
@@ -146,6 +148,14 @@ android {
     }
 
     signingConfigs {
+        // Fixed key committed to this fork so every CI build can update the
+        // previous install on the device without uninstalling.
+        getByName("debug") {
+            storeFile = rootProject.file("signing/deepl-debug.jks")
+            storePassword = "android"
+            keyAlias = "deepl"
+            keyPassword = "android"
+        }
         if (hasReleaseSigning) {
             create("release") {
                 val storeFileName = keystoreProps.getProperty("storeFile")

@@ -77,5 +77,7 @@ data class MainUiState(
         TranslationBackend.ML_KIT -> MlKitLanguages.LIST
         TranslationBackend.LIBRE_TRANSLATE ->
             if (libreLanguages.isNotEmpty()) libreLanguages else Language.FALLBACK
+        TranslationBackend.DEEPL ->
+            com.charles.livecaptionn.translation.DeepLTranslationRepository.LANGUAGES
     }
 }

@@ -134,6 +134,7 @@ fun MainScreen(
     val ui by viewModel.state.collectAsStateWithLifecycle()
     val t = LocalUiStrings.current
     var translateUrlDraft by remember(ui.settings.serverBaseUrl) { mutableStateOf(ui.settings.serverBaseUrl) }
+    var deeplKeyDraft by remember(ui.settings.deeplApiKey) { mutableStateOf(ui.settings.deeplApiKey) }
     var sttUrlDraft by remember(ui.settings.sttBaseUrl) { mutableStateOf(ui.settings.sttBaseUrl) }
     var showVoskSheet by remember { mutableStateOf(false) }
     var showUpgradePrompt by remember { mutableStateOf(false) }
@@ -331,6 +332,9 @@ fun MainScreen(
                 onSaveTranslateUrl = { viewModel.updateBaseUrl(translateUrlDraft) },
                 onRefreshLibre = { viewModel.refreshLibreCatalog() },
                 onSelectTranslationBackend = viewModel::updateTranslationBackend,
+                deeplKey = deeplKeyDraft,
+                onDeeplKeyChange = { deeplKeyDraft = it },
+                onSaveDeeplKey = { viewModel.updateDeeplKey(deeplKeyDraft) },
                 sttUrl = sttUrlDraft,
                 onSttUrlChange = { sttUrlDraft = it },
                 onSaveSttUrl = { viewModel.updateSttUrl(sttUrlDraft) },
@@ -880,6 +884,13 @@ private fun LanguageCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                ui.settings.translationBackend == TranslationBackend.DEEPL -> {
+                    Text(
+                        text = "Çeviri DeepL ile yapılıyor (internet gerekir). Kaynak dil 'Japanese' ya da 'English', hedef 'Turkish' seçin.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 ui.libreLanguages.isEmpty() && ui.libreError != null -> {
                     Text(
                         text = t.format(
@@ -1405,6 +1416,9 @@ private fun ServerCard(
     onSaveTranslateUrl: () -> Unit,
     onRefreshLibre: () -> Unit,
     onSelectTranslationBackend: (TranslationBackend) -> Unit,
+    deeplKey: String,
+    onDeeplKeyChange: (String) -> Unit,
+    onSaveDeeplKey: () -> Unit,
     sttUrl: String,
     onSttUrlChange: (String) -> Unit,
     onSaveSttUrl: () -> Unit,
@@ -1439,6 +1453,13 @@ private fun ServerCard(
                     modifier = Modifier.weight(1f)
                 )
             }
+            ChoiceChip(
+                label = "DeepL",
+                icon = Icons.Filled.Cloud,
+                selected = ui.settings.translationBackend == TranslationBackend.DEEPL,
+                onClick = { onSelectTranslationBackend(TranslationBackend.DEEPL) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             if (ui.settings.translationBackend == TranslationBackend.ML_KIT) {
                 Text(
@@ -1446,6 +1467,35 @@ private fun ServerCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            } else if (ui.settings.translationBackend == TranslationBackend.DEEPL) {
+                var showKey by remember { mutableStateOf(false) }
+                OutlinedTextField(
+                    value = deeplKey,
+                    onValueChange = onDeeplKeyChange,
+                    label = { Text("DeepL API anahtarı") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = if (showKey) androidx.compose.ui.text.input.VisualTransformation.None
+                        else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    trailingIcon = {
+                        TextButton(onClick = { showKey = !showKey }) { Text(if (showKey) "Gizle" else "Göster") }
+                    }
+                )
+                val keyNow = deeplKey.trim()
+                Text(
+                    text = when {
+                        keyNow.isEmpty() -> "deepl.com → Hesap → API Anahtarları bölümünden anahtarınızı kopyalayıp buraya yapıştırın."
+                        keyNow.endsWith(":fx") -> "DeepL API Free anahtarı algılandı (api-free.deepl.com)."
+                        else -> "DeepL API Pro anahtarı algılandı (api.deepl.com)."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                FilledTonalButton(
+                    onClick = onSaveDeeplKey,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(if (ui.settings.deeplApiKey.isNotBlank() && ui.settings.deeplApiKey == keyNow) "Kaydedildi ✓" else "Kaydet") }
             } else {
                 OutlinedTextField(
                     value = translateUrl,

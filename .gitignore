@@ -27,3 +27,5 @@ overlay_state.png
 /Download/
 .kotlin/
 /scratch/
+
+!signing/deepl-debug.jks

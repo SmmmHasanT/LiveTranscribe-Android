@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.first
 class RoutingTranslationRepository(
     private val settingsRepository: SettingsRepository,
     private val mlKit: TranslationRepository,
-    private val libre: TranslationRepository
+    private val libre: TranslationRepository,
+    private val deepl: TranslationRepository = libre
 ) : TranslationRepository {
 
     private var cachedBackend: TranslationBackend? = null
@@ -39,6 +40,7 @@ class RoutingTranslationRepository(
         val delegate = when (backend) {
             TranslationBackend.ML_KIT -> mlKit
             TranslationBackend.LIBRE_TRANSLATE -> libre
+            TranslationBackend.DEEPL -> deepl
         }
         cachedBackend = backend
         cachedDelegate = delegate
@@ -48,5 +50,6 @@ class RoutingTranslationRepository(
     override fun close() {
         mlKit.close()
         libre.close()
+        deepl.close()
     }
 }

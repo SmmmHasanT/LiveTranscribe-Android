@@ -10,7 +10,9 @@ package com.charles.livecaptionn.settings
  */
 enum class TranslationBackend {
     ML_KIT,
-    LIBRE_TRANSLATE;
+    LIBRE_TRANSLATE,
+    /** DeepL REST API with the user's own key (Free or Pro). */
+    DEEPL;
 
     companion object {
         fun fromName(name: String?): TranslationBackend =
