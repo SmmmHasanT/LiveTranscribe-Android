@@ -14,6 +14,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
@@ -114,10 +121,36 @@ private fun CaptionScreen(
     onStop: () -> Unit
 ) {
     val listState = rememberLazyListState()
-    val lastText = lines.lastOrNull()?.let { it.originalText + it.translatedText }
-    LaunchedEffect(lines.size, lastText) {
-        if (lines.isNotEmpty()) listState.animateScrollToItem(lines.size - 1)
+    val scope = rememberCoroutineScope()
+    // Follow mode: auto-scroll only while the reader is at the bottom. A drag
+    // upward pauses it; reaching the bottom again (or the button) resumes it.
+    var follow by remember { mutableStateOf(true) }
+    var dragging by remember { mutableStateOf(false) }
+    var lastSeenCount by remember { mutableStateOf(0) }
+    LaunchedEffect(listState) {
+        listState.interactionSource.interactions.collect { i ->
+            when (i) {
+                is DragInteraction.Start -> { dragging = true; follow = false }
+                is DragInteraction.Stop, is DragInteraction.Cancel -> {
+                    dragging = false
+                    follow = !listState.canScrollForward
+                }
+            }
+        }
     }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.canScrollForward }.collect { more ->
+            if (!more && !dragging) follow = true
+        }
+    }
+    val lastText = lines.lastOrNull()?.let { it.originalText + it.translatedText }
+    LaunchedEffect(lines.size, lastText, follow) {
+        if (follow && lines.isNotEmpty()) {
+            listState.animateScrollToItem(lines.size - 1)
+            lastSeenCount = lines.size
+        }
+    }
+    val newCount = if (follow) 0 else (lines.size - lastSeenCount).coerceAtLeast(0)
     val btn = Color(0xFFB0BEC5)
     Column(
         Modifier
@@ -160,6 +193,7 @@ private fun CaptionScreen(
             )
             Spacer(Modifier.weight(1f))
         } else {
+            Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -187,6 +221,19 @@ private fun CaptionScreen(
                         }
                     }
                 }
+            }
+            if (!follow) {
+                Button(
+                    onClick = {
+                        follow = true
+                        if (lines.isNotEmpty()) scope.launch { listState.animateScrollToItem(lines.size - 1) }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)
+                ) {
+                    Text(if (newCount > 0) "↓ $newCount yeni satır" else "↓ En alta dön", color = Color.White)
+                }
+            }
             }
         }
     }
