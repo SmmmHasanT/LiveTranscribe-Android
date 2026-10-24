@@ -10,7 +10,9 @@ data class CaptionRuntimeLine(
     val id: Long,
     val originalText: String,
     val translatedText: String = "",
-    val isFinal: Boolean = false
+    val isFinal: Boolean = false,
+    /** True when the text was read from the game screen (OCR), not heard. */
+    val fromScreen: Boolean = false
 )
 
 data class CaptionRuntimeState(

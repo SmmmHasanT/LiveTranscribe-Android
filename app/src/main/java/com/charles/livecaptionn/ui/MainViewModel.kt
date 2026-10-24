@@ -211,6 +211,10 @@ class MainViewModel(
         viewModelScope.launch { container.settingsRepository.update { it.copy(overlayFontId = fontId) } }
     }
 
+    fun updateScreenOcr(on: Boolean) {
+        viewModelScope.launch { container.settingsRepository.update { it.copy(screenOcr = on) } }
+    }
+
     fun updateBigScreenMode(on: Boolean) {
         viewModelScope.launch { container.settingsRepository.update { it.copy(bigScreenMode = on) } }
     }

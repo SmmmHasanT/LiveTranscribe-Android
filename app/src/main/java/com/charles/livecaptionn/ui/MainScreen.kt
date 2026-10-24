@@ -270,6 +270,7 @@ fun MainScreen(
                 onStop = onStop,
                 canStart = modelReady && permissionReady,
                 onBigScreenChange = viewModel::updateBigScreenMode,
+                onScreenOcrChange = viewModel::updateScreenOcr,
                 modelMissing = !modelReady,
                 onDownloadModel = viewModel::downloadVoskModel,
                 onManageModels = { showVoskSheet = true }
@@ -454,6 +455,7 @@ private fun CaptionControlCard(
     onStop: () -> Unit,
     canStart: Boolean,
     onBigScreenChange: (Boolean) -> Unit,
+    onScreenOcrChange: (Boolean) -> Unit,
     modelMissing: Boolean = false,
     onDownloadModel: (VoskModelInfo) -> Unit = {},
     onManageModels: () -> Unit = {}
@@ -563,6 +565,23 @@ private fun CaptionControlCard(
                     )
                 }
                 Switch(checked = ui.settings.bigScreenMode, onCheckedChange = onBigScreenChange)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Ekran yazılarını da çevir", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        if (ui.settings.audioSource == AudioSource.SYSTEM)
+                            "Oyun ekranındaki yazılar okunup çevrilir (📺 işaretli satırlar). Durdurup yeniden başlatınca etkinleşir."
+                        else "Bunun için ses kaynağı 'Sistem sesi' olmalı.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = ui.settings.screenOcr,
+                    onCheckedChange = onScreenOcrChange,
+                    enabled = ui.settings.audioSource == AudioSource.SYSTEM
+                )
             }
             if (isRunning && ui.settings.bigScreenMode) {
                 OutlinedButton(

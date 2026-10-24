@@ -63,6 +63,7 @@ class CaptionForegroundService : Service() {
     private val overlayReady = MutableStateFlow(0)
 
     private var speechEngine: SpeechEngine? = null
+    private var screenEngine: com.charles.livecaptionn.speech.ScreenTextEngine? = null
     private var overlayController: OverlayController? = null
     private var paused = false
     private var failureMessage: String? = null
@@ -123,6 +124,7 @@ class CaptionForegroundService : Service() {
             ACTION_STOP -> stopFlow()
             ACTION_PAUSE_RESUME -> togglePause()
             ACTION_TOGGLE_MINIMIZE -> toggleMinimized()
+            ACTION_SCAN_SCREEN -> screenEngine?.scanNow()
         }
         return START_STICKY
     }
@@ -345,6 +347,19 @@ class CaptionForegroundService : Service() {
                 }
             }
 
+            if (settings.screenOcr && mediaProjection != null) {
+                val ocr = com.charles.livecaptionn.speech.ScreenTextEngine(
+                    context = this@CaptionForegroundService,
+                    projection = mediaProjection,
+                    languageCode = sttLanguageCode,
+                    scope = serviceScope,
+                    isPaused = { app.container.runtimeStore.state.value.paused },
+                    onText = { text -> onScreenText(text) }
+                )
+                screenEngine = ocr
+                ocr.start()
+            }
+
             if (!settings.bigScreenMode) {
                 showOverlay()
                 observeOverlayUpdates()
@@ -407,6 +422,21 @@ class CaptionForegroundService : Service() {
         themeId = if (hasPro) settings.overlayThemeId else OverlayThemeCatalog.FREE_THEME_ID,
         fontId = if (hasPro) settings.overlayFontId else OverlayFontCatalog.FREE_FONT_ID
     )
+
+    /** A finished block of on-screen text: add it as its own line and translate it. */
+    private fun onScreenText(text: String) {
+        val id = lineIdCounter.incrementAndGet()
+        val line = CaptionRuntimeLine(id = id, originalText = text, isFinal = true, fromScreen = true)
+        app.container.runtimeStore.update {
+            val lines = it.transcriptLines
+            val last = lines.lastOrNull()
+            // Keep an in-progress spoken line at the end so speech keeps updating it.
+            val next = if (last != null && !last.isFinal) lines.dropLast(1) + line + last else lines + line
+            it.copy(transcriptLines = next.takeLast(MAX_TRANSCRIPT_LINES))
+        }
+        synchronized(this) { pendingFinalTranslations.add(TranslationRequest(text, id, true)) }
+        translateRequests.tryEmit(Unit)
+    }
 
     private fun queueTranslation(text: String, lineId: Long, isFinal: Boolean = false) {
         synchronized(this) {
@@ -496,6 +526,8 @@ class CaptionForegroundService : Service() {
 
     private fun stopFlow() {
         captionSessionActive.set(false)
+        try { screenEngine?.stop() } catch (_: Throwable) {}
+        screenEngine = null
         try { speechEngine?.stop() } catch (_: Throwable) {}
         speechEngine = null
         overlayController?.hide()
@@ -517,6 +549,8 @@ class CaptionForegroundService : Service() {
     private fun failAndStop(message: String) {
         captionSessionActive.set(false)
         failureMessage = message
+        try { screenEngine?.stop() } catch (_: Throwable) {}
+        screenEngine = null
         try { speechEngine?.stop() } catch (_: Throwable) {}
         speechEngine = null
         overlayController?.hide()
@@ -583,6 +617,7 @@ class CaptionForegroundService : Service() {
         const val ACTION_STOP = "caption.action.STOP"
         const val ACTION_PAUSE_RESUME = "caption.action.PAUSE_RESUME"
         const val ACTION_TOGGLE_MINIMIZE = "caption.action.TOGGLE_MINIMIZE"
+        const val ACTION_SCAN_SCREEN = "caption.action.SCAN_SCREEN"
         const val EXTRA_AUDIO_SOURCE = "caption.extra.AUDIO_SOURCE"
 
         private const val CHANNEL_ID = "caption_channel"

@@ -39,6 +39,7 @@ class SettingsDataStore(private val context: Context) : SettingsRepository {
             p[TRANSLATION_BACKEND] = next.translationBackend.name
             p[DEEPL_KEY] = next.deeplApiKey.trim()
             p[BIG_SCREEN] = next.bigScreenMode
+            p[SCREEN_OCR] = next.screenOcr
             p[STT_URL] = next.sttBaseUrl.trim()
             p[OVERLAY_W] = next.overlayWidthDp
             p[OVERLAY_H] = next.overlayHeightDp
@@ -74,6 +75,7 @@ class SettingsDataStore(private val context: Context) : SettingsRepository {
             translationBackend = TranslationBackend.fromName(this[TRANSLATION_BACKEND]),
             deeplApiKey = this[DEEPL_KEY] ?: "",
             bigScreenMode = this[BIG_SCREEN] ?: true,
+            screenOcr = this[SCREEN_OCR] ?: false,
             sttBaseUrl = this[STT_URL] ?: CaptionSettings.DEFAULT_STT_URL,
             overlayWidthDp = this[OVERLAY_W] ?: CaptionSettings.DEFAULT_OVERLAY_WIDTH_DP,
             overlayHeightDp = this[OVERLAY_H] ?: CaptionSettings.DEFAULT_OVERLAY_HEIGHT_DP,
@@ -103,6 +105,7 @@ class SettingsDataStore(private val context: Context) : SettingsRepository {
         val TRANSLATION_BACKEND = stringPreferencesKey("translation_backend")
         val DEEPL_KEY = stringPreferencesKey("deepl_api_key")
         val BIG_SCREEN = booleanPreferencesKey("big_screen_mode")
+        val SCREEN_OCR = booleanPreferencesKey("screen_ocr")
         val STT_URL = stringPreferencesKey("stt_url")
         val OVERLAY_W = intPreferencesKey("overlay_w")
         val OVERLAY_H = intPreferencesKey("overlay_h")

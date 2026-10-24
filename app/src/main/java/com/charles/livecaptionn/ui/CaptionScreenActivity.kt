@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.rememberCoroutineScope
@@ -87,6 +88,8 @@ class CaptionScreenActivity : ComponentActivity() {
                 onFontBigger = { fontSp = (fontSp + 4f).coerceAtMost(72f) },
                 onToggleOriginal = { showOriginal = !showOriginal },
                 onClear = { history.clear() },
+                screenOcr = settings?.screenOcr == true,
+                onScanScreen = { sendServiceAction(CaptionForegroundService.ACTION_SCAN_SCREEN) },
                 onPause = { sendServiceAction(CaptionForegroundService.ACTION_PAUSE_RESUME) },
                 onStop = {
                     sendServiceAction(CaptionForegroundService.ACTION_STOP)
@@ -117,6 +120,8 @@ private fun CaptionScreen(
     onFontBigger: () -> Unit,
     onToggleOriginal: () -> Unit,
     onClear: () -> Unit,
+    screenOcr: Boolean,
+    onScanScreen: () -> Unit,
     onPause: () -> Unit,
     onStop: () -> Unit
 ) {
@@ -175,6 +180,9 @@ private fun CaptionScreen(
                 Text(if (showOriginal) "Orijinali gizle" else "Orijinali göster", color = btn)
             }
             TextButton(onClick = onClear) { Text("Temizle", color = btn) }
+            if (running && screenOcr) {
+                TextButton(onClick = onScanScreen) { Text("📺 Ekranı oku", color = Color(0xFFFFCA28)) }
+            }
             if (running) {
                 TextButton(onClick = onPause) { Text(if (paused) "Devam" else "Duraklat", color = btn) }
                 TextButton(onClick = onStop) { Text("Durdur", color = Color(0xFFEF5350)) }
@@ -201,7 +209,19 @@ private fun CaptionScreen(
             ) {
                 items(lines, key = { it.id }) { line ->
                     val latest = line.id == lines.last().id
-                    Column(Modifier.fillMaxWidth()) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (line.fromScreen) Modifier
+                                    .background(Color(0xFF1A2330), RoundedCornerShape(10.dp))
+                                    .padding(10.dp)
+                                else Modifier
+                            )
+                    ) {
+                        if (line.fromScreen) {
+                            Text("📺 Ekran", color = Color(0xFFFFCA28), fontSize = 12.sp)
+                        }
                         if (showOriginal) {
                             Text(
                                 line.originalText,

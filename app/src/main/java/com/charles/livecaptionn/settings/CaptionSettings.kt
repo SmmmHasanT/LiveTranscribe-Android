@@ -20,6 +20,8 @@ data class CaptionSettings(
     val deeplApiKey: String = "",
     /** Show captions in a full-screen page (Thor bottom screen) instead of the floating overlay. */
     val bigScreenMode: Boolean = true,
+    /** Also read and translate text shown on the game screen (needs system audio mode). */
+    val screenOcr: Boolean = false,
     val sttBaseUrl: String = DEFAULT_STT_URL,
     val overlayWidthDp: Int = DEFAULT_OVERLAY_WIDTH_DP,
     val overlayHeightDp: Int = DEFAULT_OVERLAY_HEIGHT_DP,

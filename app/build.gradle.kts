@@ -229,6 +229,10 @@ dependencies {
 
     // On-device translation (Google Translate models cached offline).
     implementation("com.google.mlkit:translate:17.0.3")
+    // On-screen text reading (OCR) for game dialogue.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     // Firebase BoM pins compatible versions of every Firebase SDK below.
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
